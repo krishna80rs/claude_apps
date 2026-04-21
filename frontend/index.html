@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hobby Tracker</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Hobby Tracker</h1>
+      <p class="subtitle">Tell us what you love</p>
+    </header>
+
+    <section class="card" id="form-section">
+      <h2>Add Your Profile</h2>
+      <form id="profile-form">
+        <div class="field">
+          <label for="name">Name</label>
+          <input type="text" id="name" placeholder="Your full name" required />
+        </div>
+
+        <div class="field">
+          <label for="email">Email</label>
+          <input type="email" id="email" placeholder="you@example.com" required />
+        </div>
+
+        <div class="field">
+          <label>Interests <span class="hint">(click to select)</span></label>
+          <div class="tag-grid" id="interest-tags">
+            <button type="button" class="tag" data-value="technology">Technology</button>
+            <button type="button" class="tag" data-value="music">Music</button>
+            <button type="button" class="tag" data-value="sports">Sports</button>
+            <button type="button" class="tag" data-value="travel">Travel</button>
+            <button type="button" class="tag" data-value="cooking">Cooking</button>
+            <button type="button" class="tag" data-value="art">Art</button>
+            <button type="button" class="tag" data-value="science">Science</button>
+            <button type="button" class="tag" data-value="gaming">Gaming</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="hobbies">Hobbies <span class="hint">(comma-separated)</span></label>
+          <input type="text" id="hobbies" placeholder="e.g. cycling, painting, reading" />
+        </div>
+
+        <div id="form-error" class="error hidden"></div>
+        <button type="submit" class="btn-primary" id="submit-btn">Save Profile</button>
+      </form>
+    </section>
+
+    <section class="card" id="profiles-section">
+      <div class="profiles-header">
+        <h2>All Profiles</h2>
+        <button class="btn-secondary" id="refresh-btn">Refresh</button>
+      </div>
+      <div id="profiles-list"><p class="muted">Loading...</p></div>
+    </section>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

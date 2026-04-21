@@ -1,0 +1,63 @@
+name: CD — Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy-frontend:
+    name: Deploy Frontend → GitHub Pages
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload frontend artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: frontend/
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  deploy-backend:
+    name: Deploy Backend → Render
+    runs-on: ubuntu-latest
+    needs: []          # runs in parallel with frontend deploy
+    env:
+      RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+
+    steps:
+      - name: Trigger Render deploy
+        if: env.RENDER_DEPLOY_HOOK != ''
+        run: |
+          curl -s --fail -X POST "$RENDER_DEPLOY_HOOK" \
+            -H "Content-Type: application/json" \
+            -d '{"clearCache": false}'
+          echo "Render deploy triggered"
+
+      - name: Skip (no hook configured)
+        if: env.RENDER_DEPLOY_HOOK == ''
+        run: echo "RENDER_DEPLOY_HOOK_URL secret not set — skipping backend deploy"
+
+  notify:
+    name: Notify deploy status
+    runs-on: ubuntu-latest
+    needs: [deploy-frontend, deploy-backend]
+    if: always()
+    steps:
+      - name: Summarise
+        run: |
+          echo "## Deploy Summary" >> $GITHUB_STEP_SUMMARY
+          echo "| Target | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend (GitHub Pages) | ${{ needs.deploy-frontend.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Backend (Render) | ${{ needs.deploy-backend.result }} |" >> $GITHUB_STEP_SUMMARY
