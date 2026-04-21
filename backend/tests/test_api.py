@@ -9,7 +9,6 @@ from main import app
 def setup_test_db(tmp_path, monkeypatch):
     test_db = tmp_path / "test.db"
     monkeypatch.setattr("database.DB_PATH", test_db)
-    monkeypatch.setattr("main.DB_PATH", test_db)
     init_db()
 
 
