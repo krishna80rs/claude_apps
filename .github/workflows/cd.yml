@@ -4,12 +4,20 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
   deploy-frontend:
     name: Deploy Frontend → GitHub Pages
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     permissions:
-      contents: write
+      contents: read
       pages: write
       id-token: write
 
@@ -18,6 +26,8 @@ jobs:
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
+        with:
+          enablement: true
 
       - name: Upload frontend artifact
         uses: actions/upload-pages-artifact@v3
