@@ -57,8 +57,12 @@ def create_profile(profile: ProfileIn):
         try:
             cursor = conn.execute(
                 "INSERT INTO profiles (name, email, hobbies, interests) VALUES (?, ?, ?, ?)",
-                (profile.name, profile.email,
-                 json.dumps(profile.hobbies), json.dumps(profile.interests)),
+                (
+                    profile.name,
+                    profile.email,
+                    json.dumps(profile.hobbies),
+                    json.dumps(profile.interests),
+                ),
             )
             conn.commit()
             row = conn.execute(
@@ -93,9 +97,7 @@ def get_profile(profile_id: int):
 @app.delete("/api/profiles/{profile_id}", status_code=204)
 def delete_profile(profile_id: int):
     with get_connection() as conn:
-        result = conn.execute(
-            "DELETE FROM profiles WHERE id = ?", (profile_id,)
-        )
+        result = conn.execute("DELETE FROM profiles WHERE id = ?", (profile_id,))
         conn.commit()
     if result.rowcount == 0:
         raise HTTPException(status_code=404, detail="Profile not found")
