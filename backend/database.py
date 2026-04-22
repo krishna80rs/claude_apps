@@ -19,7 +19,15 @@ def init_db():
                 email TEXT UNIQUE NOT NULL,
                 hobbies TEXT NOT NULL,
                 interests TEXT NOT NULL,
+                document_name TEXT,
+                document_data BLOB,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
+        # migrate existing DBs that lack document columns
+        cols = {r[1] for r in conn.execute("PRAGMA table_info(profiles)")}
+        if "document_name" not in cols:
+            conn.execute("ALTER TABLE profiles ADD COLUMN document_name TEXT")
+        if "document_data" not in cols:
+            conn.execute("ALTER TABLE profiles ADD COLUMN document_data BLOB")
         conn.commit()

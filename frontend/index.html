@@ -3,60 +3,155 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hobby Tracker</title>
+  <title>Hobby System</title>
   <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>Hobby Tracker</h1>
-      <p class="subtitle">Tell us what you love</p>
-    </header>
 
-    <section class="card" id="form-section">
-      <h2>Add Your Profile</h2>
-      <form id="profile-form">
-        <div class="field">
-          <label for="name">Name</label>
-          <input type="text" id="name" placeholder="Your full name" required />
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-brand">
+      <svg class="header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="3" width="7" height="7" rx="1"/>
+        <rect x="14" y="3" width="7" height="7" rx="1"/>
+        <rect x="3" y="14" width="7" height="7" rx="1"/>
+        <rect x="14" y="14" width="7" height="7" rx="1"/>
+      </svg>
+      <span class="header-title">Hobby System</span>
+    </div>
+    <div class="header-meta">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+        <circle cx="9" cy="7" r="4"/>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      </svg>
+      <span id="member-count">— members</span>
+    </div>
+  </header>
+
+  <!-- LAYOUT -->
+  <div class="layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <nav class="nav">
+        <button class="nav-item active" id="nav-report" onclick="showView('report')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+            <polyline points="10 9 9 9 8 9"/>
+          </svg>
+          Report
+        </button>
+        <button class="nav-item" id="nav-form" onclick="showView('form')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="16"/>
+            <line x1="8" y1="12" x2="16" y2="12"/>
+          </svg>
+          New Entry
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-stat">
+          <span class="stat-value" id="side-count">0</span>
+          <span class="stat-label">Total Entries</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main">
+
+      <!-- REPORT VIEW -->
+      <div id="view-report" class="view active">
+        <div class="view-header">
+          <div>
+            <h2 class="view-title">Member Report</h2>
+            <p class="view-sub">All registered members and their profiles</p>
+          </div>
+          <button class="btn-icon" onclick="loadProfiles()" title="Refresh">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+              <polyline points="23 4 23 10 17 10"/>
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+            </svg>
+            Refresh
+          </button>
         </div>
 
-        <div class="field">
-          <label for="email">Email</label>
-          <input type="email" id="email" placeholder="you@example.com" required />
+        <div id="profiles-list">
+          <div class="loading-state">Loading members...</div>
         </div>
+      </div>
 
-        <div class="field">
-          <label>Interests <span class="hint">(click to select)</span></label>
-          <div class="tag-grid" id="interest-tags">
-            <button type="button" class="tag" data-value="technology">Technology</button>
-            <button type="button" class="tag" data-value="music">Music</button>
-            <button type="button" class="tag" data-value="sports">Sports</button>
-            <button type="button" class="tag" data-value="travel">Travel</button>
-            <button type="button" class="tag" data-value="cooking">Cooking</button>
-            <button type="button" class="tag" data-value="art">Art</button>
-            <button type="button" class="tag" data-value="science">Science</button>
-            <button type="button" class="tag" data-value="gaming">Gaming</button>
+      <!-- FORM VIEW -->
+      <div id="view-form" class="view">
+        <div class="view-header">
+          <div>
+            <h2 class="view-title">New Entry</h2>
+            <p class="view-sub">Add a new member profile to the system</p>
           </div>
         </div>
 
-        <div class="field">
-          <label for="hobbies">Hobbies <span class="hint">(comma-separated)</span></label>
-          <input type="text" id="hobbies" placeholder="e.g. cycling, painting, reading" />
-        </div>
+        <form id="profile-form" class="entry-form">
+          <div class="form-grid">
+            <div class="field">
+              <label for="name">Full Name <span class="req">*</span></label>
+              <input type="text" id="name" placeholder="e.g. Krishna Sharma" required />
+            </div>
+            <div class="field">
+              <label for="email">Email Address <span class="req">*</span></label>
+              <input type="email" id="email" placeholder="you@example.com" required />
+            </div>
+          </div>
 
-        <div id="form-error" class="error hidden"></div>
-        <button type="submit" class="btn-primary" id="submit-btn">Save Profile</button>
-      </form>
-    </section>
+          <div class="field">
+            <label>Interests <span class="hint">Select all that apply</span></label>
+            <div class="tag-grid" id="interest-tags">
+              <button type="button" class="tag" data-value="technology">Technology</button>
+              <button type="button" class="tag" data-value="music">Music</button>
+              <button type="button" class="tag" data-value="sports">Sports</button>
+              <button type="button" class="tag" data-value="travel">Travel</button>
+              <button type="button" class="tag" data-value="cooking">Cooking</button>
+              <button type="button" class="tag" data-value="art">Art</button>
+              <button type="button" class="tag" data-value="science">Science</button>
+              <button type="button" class="tag" data-value="gaming">Gaming</button>
+            </div>
+          </div>
 
-    <section class="card" id="profiles-section">
-      <div class="profiles-header">
-        <h2>All Profiles</h2>
-        <button class="btn-secondary" id="refresh-btn">Refresh</button>
+          <div class="field">
+            <label for="hobbies">Hobbies <span class="hint">Comma-separated</span></label>
+            <input type="text" id="hobbies" placeholder="e.g. cycling, painting, reading" />
+          </div>
+
+          <div class="field">
+            <label>Attach Document <span class="hint">Optional — CV, bio, etc.</span></label>
+            <div class="upload-area" id="upload-area" onclick="document.getElementById('doc-file').click()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="28" height="28">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              <p id="upload-label">Click to select a file</p>
+              <span class="upload-hint">PDF, DOCX, TXT, PNG, JPG — any format</span>
+              <input type="file" id="doc-file" style="display:none" />
+            </div>
+          </div>
+
+          <div id="form-error" class="error hidden"></div>
+
+          <div class="form-actions">
+            <button type="button" class="btn-secondary" onclick="resetForm()">Clear</button>
+            <button type="submit" class="btn-primary" id="submit-btn">Save Profile</button>
+          </div>
+        </form>
       </div>
-      <div id="profiles-list"><p class="muted">Loading...</p></div>
-    </section>
+
+    </main>
   </div>
 
   <script src="/static/app.js"></script>

@@ -1,10 +1,12 @@
+import base64
 import json
 from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import Optional
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, EmailStr
 
@@ -31,15 +33,13 @@ if FRONTEND_DIR.exists():
     app.mount("/static", StaticFiles(directory=str(FRONTEND_DIR)), name="static")
 
 
-class ProfileIn(BaseModel):
+class ProfileOut(BaseModel):
+    id: int
     name: str
-    email: EmailStr
+    email: str
     hobbies: list[str]
     interests: list[str]
-
-
-class ProfileOut(ProfileIn):
-    id: int
+    document_name: Optional[str]
     created_at: str
 
 
@@ -52,16 +52,35 @@ def serve_frontend():
 
 
 @app.post("/api/profiles", response_model=ProfileOut, status_code=201)
-def create_profile(profile: ProfileIn):
+async def create_profile(
+    name: str = Form(...),
+    email: str = Form(...),
+    hobbies: str = Form(...),
+    interests: str = Form(...),
+    document: Optional[UploadFile] = File(None),
+):
+    hobbies_list = json.loads(hobbies)
+    interests_list = json.loads(interests)
+
+    doc_name = None
+    doc_data = None
+    if document and document.filename:
+        doc_name = document.filename
+        doc_data = await document.read()
+
     with get_connection() as conn:
         try:
             cursor = conn.execute(
-                "INSERT INTO profiles (name, email, hobbies, interests) VALUES (?, ?, ?, ?)",
+                """INSERT INTO profiles
+                   (name, email, hobbies, interests, document_name, document_data)
+                   VALUES (?, ?, ?, ?, ?, ?)""",
                 (
-                    profile.name,
-                    profile.email,
-                    json.dumps(profile.hobbies),
-                    json.dumps(profile.interests),
+                    name,
+                    email,
+                    json.dumps(hobbies_list),
+                    json.dumps(interests_list),
+                    doc_name,
+                    doc_data,
                 ),
             )
             conn.commit()
@@ -94,6 +113,24 @@ def get_profile(profile_id: int):
     return _row_to_dict(row)
 
 
+@app.get("/api/profiles/{profile_id}/document")
+def download_document(profile_id: int):
+    with get_connection() as conn:
+        row = conn.execute(
+            "SELECT document_name, document_data FROM profiles WHERE id = ?",
+            (profile_id,),
+        ).fetchone()
+    if not row or not row["document_data"]:
+        raise HTTPException(status_code=404, detail="No document attached")
+    return Response(
+        content=bytes(row["document_data"]),
+        media_type="application/octet-stream",
+        headers={
+            "Content-Disposition": f'attachment; filename="{row["document_name"]}"'
+        },
+    )
+
+
 @app.delete("/api/profiles/{profile_id}", status_code=204)
 def delete_profile(profile_id: int):
     with get_connection() as conn:
@@ -107,4 +144,5 @@ def _row_to_dict(row) -> dict:
     d = dict(row)
     d["hobbies"] = json.loads(d["hobbies"])
     d["interests"] = json.loads(d["interests"])
+    d.pop("document_data", None)
     return d
