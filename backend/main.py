@@ -1,4 +1,3 @@
-import base64
 import json
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -8,7 +7,7 @@ from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 
 from database import get_connection, init_db
 
