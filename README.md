@@ -1,31 +1,129 @@
-# Hobby Tracker
+# Hobby System
 
-A lightweight app to store user interests and hobbies, with a GitHub Actions CI/CD pipeline modelled after ADO.
+A dashboard app to register and browse member interests and hobbies — with a full GitHub Actions CI/CD pipeline.
 
-## Stack
+---
 
-| Layer | Tech |
-|-------|------|
-| Backend | Python 3.12 + FastAPI |
-| Database | SQLite (file-based, zero config) |
-| Frontend | Vanilla HTML/CSS/JS |
-| CI | GitHub Actions — lint + test on every PR |
-| CD | GitHub Actions — deploy on push to `main` |
+## Live URLs
+
+| | URL |
+|---|---|
+| **App (frontend)** | https://krishna80rs.github.io/claude_apps/ |
+| **Backend API** | https://claude-apps-tymn.onrender.com |
+| **API Docs (Swagger)** | https://claude-apps-tymn.onrender.com/docs |
+| **GitHub Repo** | https://github.com/krishna80rs/claude_apps |
+
+> **Note:** The backend runs on Render free tier and spins down after 15 min of inactivity. The first request after idle may take ~30 seconds to wake up.
+
+---
+
+## How to Test the App
+
+### 1 — Browser UI (quickest)
+
+Open **https://krishna80rs.github.io/claude_apps/**
+
+**Report tab**
+- Loads all saved members automatically
+- Click **Bio** on any row to expand interests, hobbies, and attached document
+- Click **✕** to delete a member
+- Click **Refresh** to reload from the backend
+
+**New Entry tab**
+- Fill in Name and Email (both required)
+- Click interest tags to select (toggle on/off)
+- Type hobbies as comma-separated text
+- Optionally click the upload area to attach a file from your PC
+- Click **Save Profile** → switches to Report to confirm
+
+---
+
+### 2 — Swagger UI (API explorer)
+
+Open **https://claude-apps-tymn.onrender.com/docs**
+
+Interact with every endpoint directly in the browser — no code needed:
+
+| Endpoint | What it does |
+|---|---|
+| `POST /api/profiles` | Create a new profile (multipart form) |
+| `GET /api/profiles` | List all profiles |
+| `GET /api/profiles/{id}` | Get one profile by ID |
+| `GET /api/profiles/{id}/document` | Download attached document |
+| `DELETE /api/profiles/{id}` | Delete a profile |
+
+---
+
+### 3 — PowerShell (quick API test)
+
+```powershell
+$BASE = "https://claude-apps-tymn.onrender.com"
+
+# Create a profile
+Invoke-WebRequest -Uri "$BASE/api/profiles" -Method POST `
+  -Body @{
+    name      = "Test User"
+    email     = "test@example.com"
+    hobbies   = '["cycling","reading"]'
+    interests = '["technology","music"]'
+  } -UseBasicParsing | Select-Object StatusCode, Content
+
+# List all profiles
+Invoke-WebRequest -Uri "$BASE/api/profiles" -UseBasicParsing | Select-Object Content
+
+# Delete a profile (replace 1 with real ID)
+Invoke-WebRequest -Uri "$BASE/api/profiles/1" -Method DELETE -UseBasicParsing
+```
+
+---
+
+### 4 — curl (Linux / macOS / Git Bash)
+
+```bash
+BASE="https://claude-apps-tymn.onrender.com"
+
+# Create
+curl -X POST "$BASE/api/profiles" \
+  -F "name=Test User" \
+  -F "email=test@example.com" \
+  -F 'hobbies=["cycling","reading"]' \
+  -F 'interests=["technology","music"]'
+
+# List all
+curl "$BASE/api/profiles" | python -m json.tool
+
+# Create with file attachment
+curl -X POST "$BASE/api/profiles" \
+  -F "name=File User" \
+  -F "email=fileuser@example.com" \
+  -F 'hobbies=["coding"]' \
+  -F 'interests=["science"]' \
+  -F "document=@/path/to/your/file.pdf"
+```
+
+---
 
 ## CI/CD Pipeline
 
-```
-PR opened
-  └── ci.yml
-        ├── lint  (ruff check + format)
-        └── test  (pytest) ← blocked until lint passes
+Every push to `main` triggers two GitHub Actions workflows:
 
-Push to main
-  └── cd.yml
-        ├── deploy-frontend → GitHub Pages
-        ├── deploy-backend  → Render (via deploy hook)
-        └── notify          → Job summary in GitHub UI
 ```
+Push to main
+  ├── CI — Lint & Test
+  │     ├── ruff check  (import sort + lint)
+  │     ├── ruff format (code formatting)
+  │     └── pytest      (7 tests, including file upload)
+  │
+  └── CD — Deploy
+        ├── Frontend → GitHub Pages  (automatic)
+        └── Backend  → Render        (via deploy hook secret)
+```
+
+Pull requests are gated — CI must pass before merge.
+
+View pipeline runs: **https://github.com/krishna80rs/claude_apps/actions**
+
+---
 
 ## Local Setup
 
@@ -34,13 +132,17 @@ Push to main
 ```bash
 cd backend
 python -m venv .venv
-source .venv/bin/activate        # Windows: .venv\Scripts\activate
+# Windows:
+.venv\Scripts\activate
+# macOS/Linux:
+source .venv/bin/activate
+
 pip install -r requirements.txt
 uvicorn main:app --reload
 ```
 
-API available at http://localhost:8000  
-Swagger docs at http://localhost:8000/docs
+App runs at **http://localhost:8000**  
+Swagger docs at **http://localhost:8000/docs**
 
 ### Run Tests
 
@@ -49,26 +151,51 @@ cd backend
 pytest tests/ -v
 ```
 
-## Deploying
+### Frontend
 
-### Frontend → GitHub Pages
+The frontend is plain HTML/CSS/JS — open `frontend/index.html` directly in a browser, or serve it:
 
-1. In your repo: **Settings → Pages → Source → GitHub Actions**
-2. Push to `main` — the `cd.yml` workflow deploys automatically
+```bash
+cd frontend
+python -m http.server 3000
+# open http://localhost:3000
+```
 
-### Backend → Render
+Update `const API` in `app.js` to point to your local backend (`http://localhost:8000`) when testing locally.
 
-1. Create a new **Web Service** on [render.com](https://render.com)
-2. Set **Build Command:** `pip install -r backend/requirements.txt`
-3. Set **Start Command:** `uvicorn backend.main:app --host 0.0.0.0 --port $PORT`
-4. Copy the **Deploy Hook URL** from Render → add as GitHub secret `RENDER_DEPLOY_HOOK_URL`
-5. Push to `main` — CD pipeline triggers the Render deploy automatically
+---
 
-## API Endpoints
+## Project Structure
 
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | `/api/profiles` | Create a profile |
-| GET | `/api/profiles` | List all profiles |
-| GET | `/api/profiles/{id}` | Get one profile |
-| DELETE | `/api/profiles/{id}` | Delete a profile |
+```
+claude_apps/
+├── .github/workflows/
+│   ├── ci.yml          ← lint + test on every push / PR
+│   └── cd.yml          ← deploy on push to main
+├── backend/
+│   ├── main.py         ← FastAPI app (CRUD + file upload)
+│   ├── database.py     ← SQLite init + connection
+│   ├── conftest.py     ← pytest path setup
+│   ├── requirements.txt
+│   ├── ruff.toml       ← linter config
+│   └── tests/
+│       └── test_api.py ← 7 endpoint tests
+├── frontend/
+│   ├── index.html      ← dashboard layout
+│   ├── style.css       ← full UI styles
+│   └── app.js          ← report, bio drawer, form, upload
+├── render.yaml         ← Render deploy config
+└── README.md
+```
+
+---
+
+## Stack
+
+| Layer | Technology |
+|---|---|
+| Backend | Python 3.12 + FastAPI |
+| Database | SQLite (file-based, zero config) |
+| Frontend | Vanilla HTML / CSS / JS |
+| CI | GitHub Actions — ruff lint + pytest |
+| CD | GitHub Actions → GitHub Pages + Render |
