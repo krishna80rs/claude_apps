@@ -144,4 +144,7 @@ def _row_to_dict(row) -> dict:
     d["hobbies"] = json.loads(d["hobbies"])
     d["interests"] = json.loads(d["interests"])
     d.pop("document_data", None)
+    # normalise timestamp to string
+    if hasattr(d.get("created_at"), "isoformat"):
+        d["created_at"] = d["created_at"].isoformat()
     return d
